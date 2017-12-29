@@ -1,0 +1,33 @@
+﻿<Window x:Class="ThunderProfile.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ThunderProfile"
+        xmlns:res="clr-namespace:ThunderProfile.Properties"
+        mc:Ignorable="d"
+        Title="{Binding Caption}" Height="310" Width="250" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition />
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <ToolBar>
+            <Button ToolTip="{x:Static res:Resources.RefreshButton_ToolTip}" Command="{Binding RefreshCommand}">
+                <Image Source="img/refresh.png" />
+            </Button>
+            <Separator/>
+            <Button ToolTip="{x:Static res:Resources.RefreshButton_About}" Command="{Binding AboutBoxCommand}">
+                <Image Source="img/HelpPng.png" />
+            </Button>
+        </ToolBar>
+        <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="0.5" Margin="4" CornerRadius="2">
+            <TextBox Text="{Binding MailBoxes}" Margin="3" BorderThickness="0"/>
+        </Border>
+        <StatusBar Grid.Row="2">
+            <TextBlock Text="{Binding MailBoxCount}" /> 
+        </StatusBar>
+
+    </Grid>
+</Window>
