@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThunderProfile", "ThunderPr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TiProfConsole", "TiProfConsole\TiProfConsole.csproj", "{A8E36778-0699-48F4-992C-6B39A9E026B4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TiProfConsoleTests", "TiProfConsoleTests\TiProfConsoleTests.csproj", "{4D44A896-4F33-4205-A7D1-A045DE24D734}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{A8E36778-0699-48F4-992C-6B39A9E026B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8E36778-0699-48F4-992C-6B39A9E026B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8E36778-0699-48F4-992C-6B39A9E026B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D44A896-4F33-4205-A7D1-A045DE24D734}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D44A896-4F33-4205-A7D1-A045DE24D734}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D44A896-4F33-4205-A7D1-A045DE24D734}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D44A896-4F33-4205-A7D1-A045DE24D734}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -9,26 +9,36 @@ namespace TiProfConsole
     public class Profile
     {
 
-        private IniFile _IniFile;
         public Profile(IniFile iniFile)
         {
-            _IniFile = iniFile;
+            var found = File.ReadAllLines(file).Where(n => n.Contains("useremail"));
         }
 
-        private List<IniStruct> _ListIniStruct { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        private List<IniStruct> _ListIniStruct = new List<IniStruct>();
+        public List<IniStruct> ListIniStruct => _ListIniStruct;
 
         public static Profile Load(IniFile iniFile)
         {
-            return new Profile(iniFile);
+            try
+            {
+                return new Profile(iniFile);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
-        public static void Save(Profile profile)
+        public void Save()
         {
             
         }
     }
 
-    internal class IniStruct
+    public class IniStruct
     {
         public string UserName { get; set; }
         public string Mail { get; set; }
