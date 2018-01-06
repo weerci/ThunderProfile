@@ -17,7 +17,7 @@ namespace TiProfConsole
             // читаем файл настроек
 
             // если не найден создаем класс, с данными по умолчанию
-            if
+            
             return new IniFile
             {
                  PathToIni = PATH_TO_INI,

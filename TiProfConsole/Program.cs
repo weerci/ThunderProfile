@@ -10,8 +10,14 @@ namespace TiProfConsole
     {
         static void Main(string[] args)
         {
-            IniFile iniFile = iniFile.Load();
+            // Получаем файл с настройками
+            IniFile iniFile = IniFile.Load();
 
+            Profile profile = Profile.Load(iniFile);
+            if (profile == null)
+            {
+                Console.WriteLine("Почтовые ящики не найдены");
+            }
         }
     }
 }
