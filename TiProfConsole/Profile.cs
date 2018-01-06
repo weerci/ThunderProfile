@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,7 +12,16 @@ namespace TiProfConsole
 
         public Profile(IniFile iniFile)
         {
-            var found = File.ReadAllLines(file).Where(n => n.Contains("useremail"));
+            // выбираем все доступные профили
+            var found = File.ReadAllLines(iniFile.PathToIni)
+                .Where(n => n.Contains("Path="))
+                .ToString().Split('=').Take(2);
+
+            //
+            foreach (var item in collection)
+            {
+
+            }
         }
 
         /// <summary>
