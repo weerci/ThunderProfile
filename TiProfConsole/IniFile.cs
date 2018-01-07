@@ -47,7 +47,7 @@ namespace TiProfConsole
         }
 
         public static string PATH_TO_PROFILE = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\Thunderbird\profiles.ini";
-        public static string PATH_TO_INI = AppDomain.CurrentDomain.BaseDirectory + "TiProf.ini";
-        public static string PATH_TO_SAVE = "C:\\MAIL\\LOGS"; // "с:\\mail\\logs";
+        public static string PATH_TO_INI = AppDomain.CurrentDomain.BaseDirectory + "\\TiProf.ini";
+        public static string PATH_TO_SAVE = "C:\\mail\\logs"; // "с:\\mail\\logs";
     }
 }

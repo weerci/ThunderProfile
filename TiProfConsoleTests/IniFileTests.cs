@@ -29,8 +29,8 @@ namespace TiProfConsole.Tests
             Profile profile = Profile.Load(iniFile);
             profile.Save();
 
-            Assert.AreEqual(1, profile.ListIniStruct.Count);
-            Assert.IsTrue(File.Exists(iniFile.PathToSave));
+            Assert.AreEqual(3, profile.ListIniStruct.Count);
+            Assert.IsTrue(File.Exists(iniFile.PathToSave + "\\UserName.csv"));
         }
     }
 }
