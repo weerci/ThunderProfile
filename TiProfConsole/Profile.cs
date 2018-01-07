@@ -9,17 +9,28 @@ namespace TiProfConsole
 {
     public class Profile
     {
-
+        private IniFile _IniFiles;
         public Profile(IniFile iniFile)
         {
+            _IniFiles = iniFile;
+
             // выбираем все доступные профили
-            var found = File.ReadAllLines(iniFile.PathToIni)
+            var foundProfile = File.ReadAllLines(iniFile.PathToProfile)
                 .Where(n => n.Contains("Path="))
-                .ToString().Split('=').Take(2);
+                .Select(n => n.Split('=')[1]);
 
             //
-            foreach (var item in collection)
+            foreach (var item in foundProfile)
             {
+                var foundIdentify = File.ReadAllLines(Path.GetDirectoryName(iniFile.PathToProfile) + "\\" + item + "\\prefs.js")
+                    .Where(n => n.Contains(".fullName") || n.Contains(".useremail"));
+                foreach (var line in foundIdentify)
+                {
+                    if (line.Contains("fullName"))
+                        _ListIniStruct.Add(new IniStruct { UserName = line.Split(',')[1].TrimStart(' ', '"').TrimEnd('"', ')', ';').Trim() });
+                    else
+                        _ListIniStruct.Last().Mail = line.Split(',')[1].TrimStart(' ', '"').TrimEnd('"', ')', ';').Trim();
+                }
 
             }
         }
@@ -44,7 +55,10 @@ namespace TiProfConsole
 
         public void Save()
         {
-            
+            if (!Directory.Exists(_IniFiles.PathToSave))
+                Directory.CreateDirectory(_IniFiles.PathToSave);
+
+            File.WriteAllLines(_IniFiles.PathToSave + "\\UserName.csv", _ListIniStruct.Select(n => n.UserName + ";" + n.Mail));
         }
     }
 

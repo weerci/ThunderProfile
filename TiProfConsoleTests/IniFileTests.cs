@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace TiProfConsole.Tests
 {
@@ -16,7 +17,7 @@ namespace TiProfConsole.Tests
         {
             IniFile iniFile = IniFile.Load();
 
-            Assert.AreEqual(IniFile.PATH_TO_INI, iniFile.PathToIni);
+            Assert.AreEqual(IniFile.PATH_TO_PROFILE, iniFile.PathToProfile);
             Assert.AreEqual(IniFile.PATH_TO_SAVE, iniFile.PathToSave);
         }
 
@@ -26,8 +27,10 @@ namespace TiProfConsole.Tests
             IniFile iniFile = IniFile.Load();
 
             Profile profile = Profile.Load(iniFile);
+            profile.Save();
 
-            Assert.AreEqual(3, profile.ListIniStruct.Count);
+            Assert.AreEqual(1, profile.ListIniStruct.Count);
+            Assert.IsTrue(File.Exists(iniFile.PathToSave));
         }
     }
 }
