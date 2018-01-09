@@ -79,15 +79,16 @@ namespace TiProfConsole
 
         private static void GetProfilesPostBox(List<Profile> profiles)
         {
+            ToLog.Item.Write("");
             foreach (var item in profiles)
                 try
                 {
                     foreach (var mail in File.ReadAllLines(item.PathToProfile).Where(n => n.Contains(".useremail")))
                         item.Mails.Add(mail.Split(',')[1].TrimStart(' ', '"').TrimEnd('"', ')', ';').Trim());
                 }
-                catch (Exception e)
+                catch (Exception )
                 {
-                    ToLog.Item.Write("Error:", e.Message);
+                    ToLog.Item.Write($"В профиле '{item.Name}' не найдены почтовые ящики Thunderbird");
                 }
         }
 
@@ -109,7 +110,7 @@ namespace TiProfConsole
                 if (!File.Exists(pathToIni)) continue;
 
                 item.PathToIni = pathToIni;
-                item.PathToProfile = pathToProfile(pathToIni);
+                item.PathToProfile = pathToProfile(item);
                 list.Add(item);
             }
             ToLog.Item.Write("Список выбранных пользователей:", list
@@ -120,20 +121,20 @@ namespace TiProfConsole
             return list;
         }
 
-        private static string pathToProfile(string pathToIni)
+        private static string pathToProfile(Profile profile)
         {
             try
             {
-                string path = File.ReadAllLines(pathToIni).Where(n => n.Contains("Path=")).Select(n => n.Split('=')[1]).First();
+                string path = File.ReadAllLines(profile.PathToIni).Where(n => n.Contains("Path=")).Select(n => n.Split('=')[1]).First();
                 if (path.Contains(':'))
                     return path + "\\prefs.js";
                 else
                     // Получаем директорию ini файла профиля и к ней прибавляем относительный путь
-                    return Path.GetDirectoryName(pathToIni) + $"\\{path}\\prefs.js";
+                    return Path.GetDirectoryName(profile.PathToIni) + $"\\{path}\\prefs.js";
             }
             catch (Exception e)
             {
-                ToLog.Item.Write("Error:", e.Message);
+                ToLog.Item.Write($"Ошибка получения пути из ini файла профиля: '{profile.Name}'", e.Message);
                 return String.Empty;
             }
         }
