@@ -16,15 +16,22 @@ namespace TiProfConsole
         {
             _IniFiles = iniFile;
 
-            // Получаем путей к папкам пользователей
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(new SelectQuery("Win32_UserAccount"));
+            var directories = Directory.GetDirectories("c:\\users");
+
             List<Tuple<String, String>> userLocalPath = new List<Tuple<String, String>>();
-            foreach (ManagementObject envVar in searcher.Get())
+            foreach (string path in directories)
             {
-                string pathToMail = $"C:\\Users\\{envVar["Name"]}\\AppData\\Roaming\\Thunderbird\\profiles.ini";
+                //Извлекаем имя пользователя из имени директории
+                string name = path.Split('\\').Last();
+
+                // Получаем путь к profiles.ini, для данного пользователя
+                string pathToMail = String.Format(iniFile.PathToProfile, name);
+
                 if (File.Exists(pathToMail))
-                    foreach (var item in File.ReadAllLines(iniFile.PathToProfile).Where(n => n.Contains("Path=")).Select(n => n.Split('=')[1]))
-                        userLocalPath.Add(new Tuple<string, string>(envVar["Name"].ToString(), item));
+                    foreach (var item in File.ReadAllLines(pathToMail).Where(n => n.Contains("Path=")).Select(n => n.Split('=')[1]))
+                        userLocalPath.Add(new Tuple<string, string>(name, item));
+                else
+                    Console.WriteLine($"Файл {pathToMail}, не существует");
             }
 
             string userName = "";
@@ -32,10 +39,15 @@ namespace TiProfConsole
             {
                 try
                 {
-                    var foundIdentify = File.ReadAllLines(Path.GetDirectoryName(iniFile.PathToProfile) + "\\" + item.Item2 + "\\prefs.js")
-                        .Where(n => n.Contains(".useremail"));
+                    List<string> list = new List<string>();
+                    // если файл содержит абсолютные пути, то ищем файл prefs.js, по абсолютному пути
+                    if (item.Item2.Contains(':'))
+                        list = File.ReadAllLines(item.Item2).Where(n => n.Contains(".useremail")).ToList();
+                    else
+                        list = File.ReadAllLines(String.Format(Path.GetDirectoryName(iniFile.PathToProfile), item.Item1) + "\\" + item.Item2 + "\\prefs.js")
+                                .Where(n => n.Contains(".useremail")).ToList();
 
-                    foreach (var line in foundIdentify)
+                    foreach (var line in list)
                     {
                         if (item.Item1 != userName)
                         {
@@ -82,7 +94,7 @@ namespace TiProfConsole
 
             foreach (var item in _ListIniStruct)
             {
-                File.WriteAllLines(_IniFiles.PathToSave + $"\\{item.UserName}.csv", item.Mails.Select(n=>item.UserName + ";" + n));
+                File.WriteAllLines(_IniFiles.PathToSave + $"\\{item.UserName}.csv", item.Mails.Select(n => item.UserName + ";" + n), Encoding.Default);
             }
 
         }

@@ -15,6 +15,7 @@ namespace TiProfConsole
         private static XmlSerializer formatter = new XmlSerializer(typeof(IniFile));
 
         public string PathToProfile { get; set; }
+
         public string PathToSave { get; set; }
 
         public static IniFile Load()
@@ -46,8 +47,8 @@ namespace TiProfConsole
             }
         }
 
-        public static string PATH_TO_PROFILE = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\Thunderbird\profiles.ini";
+        public static string PATH_TO_PROFILE = "C:\\Users\\{0}\\AppData\\Roaming\\Thunderbird\\profiles.ini";
         public static string PATH_TO_INI = AppDomain.CurrentDomain.BaseDirectory + "\\TiProf.ini";
-        public static string PATH_TO_SAVE = "C:\\mail\\logs"; // "с:\\mail\\logs";
+        public static string PATH_TO_SAVE = "C:\\mail\\logs";
     }
 }
