@@ -11,103 +11,171 @@ namespace TiProfConsole
 {
     public class Profile
     {
-        private IniFile _IniFiles;
-        public Profile(IniFile iniFile)
+        public string Name { get; set; }
+        public string FullName { get; set; }
+        public string Caption { get; set; }
+        public string Status { get; set; }
+        public string PathToIni { get; set; }
+        public string PathToProfile { get; set; }
+        public string SIDType { get; set; }
+        public bool Lockout { get; set; }
+        private List<string> _Mails = new List<string>();
+        public List<string> Mails => _Mails;
+
+        #region Static save and load
+
+        /// <summary>
+        /// Загружает профили почтовых
+        /// </summary>
+        /// <param name="iniFile"></param>
+        /// <returns></returns>
+        public static List<PostBox> Load()
         {
-            _IniFiles = iniFile;
+            List<PostBox> list = new List<PostBox>();
 
-            var directories = Directory.GetDirectories("c:\\users");
+            // Получаем список всех пользователей и выбираем их
+            List<Profile> profiles = GetProfiles();
 
-            List<Tuple<String, String>> userLocalPath = new List<Tuple<String, String>>();
-            foreach (string path in directories)
+            // Для каждого профиля получаем список его почтовых ящиков
+            GetProfilesPostBox(profiles);
+
+            // Формируем список полученных ящиков пользователей
+            foreach (var item in profiles)
             {
-                //Извлекаем имя пользователя из имени директории
-                string name = path.Split('\\').Last();
-
-                // Получаем путь к profiles.ini, для данного пользователя
-                string pathToMail = String.Format(iniFile.PathToProfile, name);
-
-                if (File.Exists(pathToMail))
-                    foreach (var item in File.ReadAllLines(pathToMail).Where(n => n.Contains("Path=")).Select(n => n.Split('=')[1]))
-                        userLocalPath.Add(new Tuple<string, string>(name, item));
-                else
-                    Console.WriteLine($"Файл {pathToMail}, не существует");
+                list.Add(new PostBox
+                {
+                    UserName = GetUserName(item),
+                    Mails = item.Mails
+                });
             }
 
-            string userName = "";
-            foreach (Tuple<String, String> item in userLocalPath)
-            {
-                try
-                {
-                    List<string> list = new List<string>();
-                    // если файл содержит абсолютные пути, то ищем файл prefs.js, по абсолютному пути
-                    if (item.Item2.Contains(':'))
-                        list = File.ReadAllLines(item.Item2).Where(n => n.Contains(".useremail")).ToList();
-                    else
-                        list = File.ReadAllLines(String.Format(Path.GetDirectoryName(iniFile.PathToProfile), item.Item1) + "\\" + item.Item2 + "\\prefs.js")
-                                .Where(n => n.Contains(".useremail")).ToList();
-
-                    foreach (var line in list)
-                    {
-                        if (item.Item1 != userName)
-                        {
-                            userName = item.Item1;
-                            IniStruct iniStruct = new IniStruct();
-                            iniStruct.UserName = userName;
-                            iniStruct.Mails.Add(line.Split(',')[1].TrimStart(' ', '"').TrimEnd('"', ')', ';').Trim());
-                            _ListIniStruct.Add(iniStruct);
-                        }
-                        else
-                            _ListIniStruct.Last().Mails.Add(line.Split(',')[1].TrimStart(' ', '"').TrimEnd('"', ')', ';').Trim());
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-            }
+            return list;
         }
 
         /// <summary>
-        /// 
+        /// Найденные почтовые ящики сохраняются по пути заданному в настройках
         /// </summary>
-        private List<IniStruct> _ListIniStruct = new List<IniStruct>();
-        public List<IniStruct> ListIniStruct => _ListIniStruct;
+        /// <param name="list">Список ящиков</param>
+        public static void Save(List<PostBox> list)
+        {
+            if (!Directory.Exists(Setter.PATH_TO_SAVE))
+                Directory.CreateDirectory(Setter.PATH_TO_SAVE);
 
-        public static Profile Load(IniFile iniFile)
+            foreach (var item in list)
+            {
+                File.WriteAllLines(Setter.PATH_TO_SAVE + $"\\{item.UserName}.csv", item.Mails.Select(n => item.UserName + ";" + n), Encoding.Default);
+            }
+
+        }
+
+        #endregion
+
+        #region Helper
+
+        private static string GetUserName(Profile profile)
+        {
+            return profile.FullName == "" ? profile.Name : profile.FullName;
+        }
+
+        private static void GetProfilesPostBox(List<Profile> profiles)
+        {
+            foreach (var item in profiles)
+                try
+                {
+                    foreach (var mail in File.ReadAllLines(item.PathToProfile).Where(n => n.Contains(".useremail")))
+                        item.Mails.Add(mail.Split(',')[1].TrimStart(' ', '"').TrimEnd('"', ')', ';').Trim());
+                }
+                catch (Exception e)
+                {
+                    ToLog.Item.Write("Error:", e.Message);
+                }
+        }
+
+        private static List<Profile> GetProfiles()
+        {
+            List<Profile> list = new List<Profile>();
+
+            // Получаем все профили
+            List<Profile> allusers = GetAllUsers();
+
+            // Выбираем нужные
+            foreach (var item in allusers)
+            {
+                if (item.Status != "OK") continue;
+                if (item.SIDType != "SidTypeUser(1)") continue;
+                if (item.Lockout) continue;
+
+                string pathToIni = String.Format(Setter.PATH_TO_PROFILE, item.Name);
+                if (!File.Exists(pathToIni)) continue;
+
+                item.PathToIni = pathToIni;
+                item.PathToProfile = pathToProfile(pathToIni);
+                list.Add(item);
+            }
+            ToLog.Item.Write("Список выбранных пользователей:", list
+                .Select(n => $"Name='{n.Name}', Caption='{n.Caption}', FullName='{n.FullName}', Status='{n.Status}', " +
+                $"SIDType='{n.SIDType}', Lockout='{n.Lockout}', Profile.ini='{n.PathToIni}', Path to profile={n.PathToProfile}")
+                .ToArray());
+
+            return list;
+        }
+
+        private static string pathToProfile(string pathToIni)
         {
             try
             {
-                return new Profile(iniFile);
+                string path = File.ReadAllLines(pathToIni).Where(n => n.Contains("Path=")).Select(n => n.Split('=')[1]).First();
+                if (path.Contains(':'))
+                    return path + "\\prefs.js";
+                else
+                    // Получаем директорию ini файла профиля и к ней прибавляем относительный путь
+                    return Path.GetDirectoryName(pathToIni) + $"\\{path}\\prefs.js";
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
-                return null;
+                ToLog.Item.Write("Error:", e.Message);
+                return String.Empty;
             }
         }
 
-        public void Save()
+        private static List<Profile> GetAllUsers()
         {
-            if (!Directory.Exists(_IniFiles.PathToSave))
-                Directory.CreateDirectory(_IniFiles.PathToSave);
+            List<Profile> list = new List<Profile>();
+            ObjectQuery oQuery = new ObjectQuery("SELECT * FROM Win32_UserAccount");
+            ManagementObjectSearcher mgmtSearch = new ManagementObjectSearcher(oQuery);
+            foreach (ManagementObject item in mgmtSearch.Get())
+                list.Add(new Profile
+                {
+                    Name = item["Name"].ToString(),
+                    Caption = item["Caption"].ToString(),
+                    FullName = item["FullName"].ToString(),
+                    Status = item["Status"].ToString(),
+                    SIDType = Setter.SIDType(Convert.ToInt32(item["SIDType"])),
+                    Lockout = Convert.ToBoolean(item["Lockout"])
+                });
 
-            foreach (var item in _ListIniStruct)
-            {
-                File.WriteAllLines(_IniFiles.PathToSave + $"\\{item.UserName}.csv", item.Mails.Select(n => item.UserName + ";" + n), Encoding.Default);
-            }
-
+            ToLog.Item.Write("Список всех пользователей:", list
+                .Select(n => $"Name='{n.Name}', Caption='{n.Caption}', FullName='{n.FullName}', Status='{n.Status}', SIDType='{n.SIDType}', Lockout='{n.Lockout}'")
+                .ToArray());
+            return list;
         }
+
+        #endregion
     }
 
-    public class IniStruct
+    public class PostBox
     {
+        public PostBox()
+        {
+            Mails = new List<string>();
+            UserName = String.Empty;
+        }
+
         // Имя пользователя
         public string UserName { get; set; }
 
         // Список его почтовых ящиков
-        private List<string> _Mails = new List<string>();
-        public List<string> Mails => _Mails;
+        public List<string> Mails { get; set; }
     }
 
 }

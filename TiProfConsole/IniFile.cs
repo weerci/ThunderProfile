@@ -22,33 +22,36 @@ namespace TiProfConsole
         {
             IniFile iniFile = new IniFile
             {
-                PathToProfile = PATH_TO_PROFILE,
-                PathToSave = PATH_TO_SAVE
+                PathToProfile = Setter.PATH_TO_PROFILE,
+                PathToSave = Setter.PATH_TO_SAVE
             };
 
             try
             {
-                using (FileStream fs = new FileStream(PATH_TO_INI, FileMode.Open))
+                ToLog.Item.Write($"Считываем настойки из файла: {Setter.PATH_TO_INI}");
+                using (FileStream fs = new FileStream(Setter.PATH_TO_INI, FileMode.Open))
                 {
                     return (IniFile)formatter.Deserialize(fs);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                ToLog.Item.Write($"Попытка не удалась. Error: {e.Message}");
+                ToLog.Item.Write("Устанавливаются данные по умолчанию:");
+                ToLog.Item.Write($"PathToProfile = {Setter.PATH_TO_PROFILE}");
+                ToLog.Item.Write($"PathToSave = {Setter.PATH_TO_SAVE}");
+
                 IniFile.Save(iniFile);
                 return iniFile;
             }
         }
         public static void Save(IniFile iniFile)
         {
-            using (FileStream fs = new FileStream(PATH_TO_INI, FileMode.Create))
+            using (FileStream fs = new FileStream(Setter.PATH_TO_INI, FileMode.Create))
             {
                 formatter.Serialize(fs, iniFile);
             }
         }
 
-        public static string PATH_TO_PROFILE = "C:\\Users\\{0}\\AppData\\Roaming\\Thunderbird\\profiles.ini";
-        public static string PATH_TO_INI = AppDomain.CurrentDomain.BaseDirectory + "\\TiProf.ini";
-        public static string PATH_TO_SAVE = "C:\\mail\\logs";
     }
 }

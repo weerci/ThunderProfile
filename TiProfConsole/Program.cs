@@ -14,11 +14,11 @@ namespace TiProfConsole
             IniFile iniFile = IniFile.Load();
 
             // Загружаем профили
-            Profile profile = Profile.Load(iniFile);
-            if (profile != null)
-                profile.Save();
-            else
-                Console.WriteLine("Почтовые ящики не найдены");
+            List<PostBox> list = Profile.Load();
+            Profile.Save(list);
+
+            // Сохраняем лог
+            ToLog.Item.Save();
         }
     }
 }
