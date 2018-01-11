@@ -16,7 +16,8 @@ namespace TiProfConsole
         public string Caption { get; set; }
         public string Status { get; set; }
         public string PathToIni { get; set; }
-        public string PathToProfile { get; set; }
+        private List<string> _PathToProfile = new List<string>();
+        public List<string> PathToProfile => _PathToProfile;
         public string SIDType { get; set; }
         public bool Lockout { get; set; }
         private List<string> _Mails = new List<string>();
@@ -44,7 +45,7 @@ namespace TiProfConsole
             {
                 list.Add(new PostBox
                 {
-                    UserName = GetUserName(item),
+                    UserName = item.Name,// GetUserName(item),
                     Mails = item.Mails
                 });
             }
@@ -83,8 +84,16 @@ namespace TiProfConsole
             foreach (var item in profiles)
                 try
                 {
-                    foreach (var mail in File.ReadAllLines(item.PathToProfile).Where(n => n.Contains(".useremail")))
-                        item.Mails.Add(mail.Split(',')[1].TrimStart(' ', '"').TrimEnd('"', ')', ';').Trim());
+                    foreach (var p in item.PathToProfile)
+                        try
+                        {
+                            foreach (var mail in File.ReadAllLines(p).Where(n => n.Contains(".useremail")))
+                                item.Mails.Add(mail.Split(',')[1].TrimStart(' ', '"').TrimEnd('"', ')', ';').Trim());
+                        }
+                        catch (Exception)
+                        {
+                            ToLog.Item.Write($"В профиле '{item.Name}', для пути {p} не найдены почтовые ящики Thunderbird");
+                        }
                 }
                 catch (Exception )
                 {
@@ -96,7 +105,7 @@ namespace TiProfConsole
         {
             List<Profile> list = new List<Profile>();
 
-            // Получаем все профили
+            // Получаем все профили windows
             List<Profile> allusers = GetAllUsers();
 
             // Выбираем нужные
@@ -110,32 +119,36 @@ namespace TiProfConsole
                 if (!File.Exists(pathToIni)) continue;
 
                 item.PathToIni = pathToIni;
-                item.PathToProfile = pathToProfile(item);
+                GetPathToProfile(item);
                 list.Add(item);
             }
             ToLog.Item.Write("Список выбранных пользователей:", list
                 .Select(n => $"Name='{n.Name}', Caption='{n.Caption}', FullName='{n.FullName}', Status='{n.Status}', " +
-                $"SIDType='{n.SIDType}', Lockout='{n.Lockout}', Profile.ini='{n.PathToIni}', Path to profile={n.PathToProfile}")
-                .ToArray());
+                $"SIDType='{n.SIDType}', Lockout='{n.Lockout}', Profile.ini='{n.PathToIni}', " +
+                $"Path to profile={n.PathToProfile.Aggregate((i, next)=>i + ";  " + next)}").ToArray());
 
             return list;
         }
 
-        private static string pathToProfile(Profile profile)
+        // Из файла настроек профиля Profile.ini вытаскивает список путей к месту хранения профиля
+        private static void GetPathToProfile(Profile profile)
         {
+            profile.PathToProfile.Clear();
             try
             {
-                string path = File.ReadAllLines(profile.PathToIni).Where(n => n.Contains("Path=")).Select(n => n.Split('=')[1]).First();
-                if (path.Contains(':'))
-                    return path + "\\prefs.js";
-                else
-                    // Получаем директорию ini файла профиля и к ней прибавляем относительный путь
-                    return Path.GetDirectoryName(profile.PathToIni) + $"\\{path}\\prefs.js";
+                var path = File.ReadAllLines(profile.PathToIni).Where(n => n.Contains("Path=")).Select(n => n.Split('=')[1]);
+                foreach (var item in path)
+                {
+                    if (item.Contains(':'))
+                        profile.PathToProfile.Add(item + "\\prefs.js");
+                    else
+                        // Получаем директорию ini файла профиля и к ней прибавляем относительный путь
+                        profile.PathToProfile.Add(Path.GetDirectoryName(profile.PathToIni) + $"\\{item}\\prefs.js");
+                }
             }
             catch (Exception e)
             {
-                ToLog.Item.Write($"Ошибка получения пути из ini файла профиля: '{profile.Name}'", e.Message);
-                return String.Empty;
+                ToLog.Item.Write($"Ошибка получения пути из ini файла профиля: '{profile.Name}'");
             }
         }
 
